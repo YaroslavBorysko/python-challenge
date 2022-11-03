@@ -4,14 +4,13 @@ import time
 import re
 
 import requests
+from aiocsv import AsyncWriter
 import aiohttp
+import aiofiles
 
 from bs4 import BeautifulSoup
 from random import randint
 from time import sleep
-
-
-
 
 
 main_page = 'https://jobs.dou.ua/companies/'
@@ -25,6 +24,7 @@ headers = {
 }
 
 companies_data = []
+
 
 async def decode_email(e):
     de = ""
@@ -89,6 +89,13 @@ async def load_data(session, url, name):
             print(result)
             companies_data.append(result)
 
+            async with aiofiles.open(f'dou.csv', 'w') as f:
+                writer = AsyncWriter(f)
+                for company in companies_data:
+                    await writer.writerow(company.keys())
+                    await writer.writerow(company.values())
+
+
 async def main():
     flag = True
     tick = 0
@@ -122,9 +129,3 @@ async def main():
                 await asyncio.sleep(1)
 
 asyncio.run(main())
-
-with open(f'dou.csv', 'w') as f:
-        writer = csv.writer(f)
-        for company in companies_data:
-            writer.writerow(company.keys())
-            writer.writerow(company.values())
